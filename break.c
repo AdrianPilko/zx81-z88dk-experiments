@@ -50,7 +50,7 @@ int __FASTCALL__ scroll_right()
 	#asm
 	ld	hl,(16396)	; D_FILE
 	inc	hl
-	ld de, 693  ; offset to bottom half
+	ld de, 792 ;693  ; offset to bottom half
 	add hl, de
 
 	ld b, 12		; scrolling 12 lines right
