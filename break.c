@@ -10,8 +10,7 @@ int __FASTCALL__ scroll_left()
 	ld	hl,(16396)	; D_FILE
 	inc	hl
 
-	ld b, 21		; scrolling 20 lines for now
-
+	ld b, 12		; scrolling 12 lines left
 .loop1
 	ld a, (hl)
 	cp 0x76
@@ -44,6 +43,51 @@ int __FASTCALL__ scroll_left()
 
 	#endasm
 }
+
+int __FASTCALL__ scroll_right()
+// works on all models, untested.
+{
+	#asm
+	ld	hl,(16396)	; D_FILE
+	inc	hl
+	ld de, 693  ; offset to bottom half
+	add hl, de
+
+	ld b, 12		; scrolling 12 lines right
+.rloop1
+	ld a, (hl)
+	cp 0x76
+	jp z, rempty_line
+
+	ld d, h
+	ld e, l		; de -> previous char
+	dec hl		; hl -> current char
+
+.rfirst
+	ld a, (hl)
+	cp 0x76
+	jr nz, rcopying
+
+	ld a, 0
+	ld (de), a		; fill last char with space
+	jr rempty_line
+
+.rcopying
+	ld (de), a
+	dec de
+	dec hl
+
+	jr rfirst
+
+.rempty_line
+
+	dec hl
+	djnz rloop1
+
+	#endasm
+}
+
+
 
 // combine 2 chars into 1 int
 int combine(uchar y, uchar x)
@@ -116,8 +160,9 @@ int main()
 	while (in_Inkey()!='Q')
 	{
 		scroll_left();
-
-		bpoke (zx81_saddr(combine(rand()%21,30)), 128); // '*'
+		scroll_right();
+		bpoke (zx81_saddr(combine(rand()%12,30)), 2); // '*'
+		bpoke (zx81_saddr(combine((rand()%12)+12,0)), 2); // '*'
 	}
     
 	return 1;
