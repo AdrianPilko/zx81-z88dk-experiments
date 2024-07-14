@@ -180,8 +180,11 @@ int main()
 		bpoke (zx81_saddr(combine(rand()%12,30)), 2); // '*'
 		bpoke (zx81_saddr(combine((rand()%12)+12,0)), 2); // '*'
 
-		if (playerY < 23) playerScreenPos -= 1;
+		if (playerY < 23 && playerY >= 12) playerScreenPos -= 1;
         bpoke (playerScreenPos+2, 0);
+
+		if (playerY < 12) playerScreenPos += 1;
+        bpoke (playerScreenPos-2, 0);
 
 		playerScreenPos = zx81_saddr(combine(playerY,playerX));
 		// we have to adjust the screen position based on Y position
