@@ -3,7 +3,7 @@
 
 // not sure there is a similar game to this like snake but constantly left or right scrolling
 // Potential changes:
-//    1) maybe reverse scroll left right top bottom when score reaches certain number
+//    1) maybe reverse scroll left right top bottom when score reaches certain number. DONE
 //    2) change rate that it all scrolls at, start easier then get faster
 //    3) add proper score/game status  on top row: SCORE xxxx HIGH SCORE xxxx LEVEL xxxx
 
@@ -100,7 +100,8 @@ int __FASTCALL__ scroll_right()
 
 
 
-// combine 2 chars into 1 int
+// got from https://www.z88dk.org/forum/viewtopic.php?t=11668 
+// combine 2 chars into 16 bit int
 int combine(uchar y, uchar x)
 {
 	int p;
@@ -109,10 +110,9 @@ int combine(uchar y, uchar x)
 }
 
 
+// got from https://www.z88dk.org/forum/viewtopic.php?t=11668 
 int __FASTCALL__ init_screen(uchar i)
 {
-	// fill the screen with spaces, so that i don't have to create new lines
-	// does the same as filltxt, but i might decide to change resolution later
 	#asm
 	ld a, l
 	ld hl,(16396)	; D_FILE
@@ -138,8 +138,8 @@ int __FASTCALL__ init_screen(uchar i)
 }
 
 
+// got from https://www.z88dk.org/forum/viewtopic.php?t=11668 
 int __FASTCALL__ zx81_saddr(int yx)
-// only works for 4k+ models, and only after using filltxt
 {
 	#asm
 	ld b, h
@@ -203,15 +203,25 @@ int main()
     uint16_t oldplayerScreenPos = 0;
     uint16_t score = 0;
 	uint8_t restart = 0;
+    uint8_t enemyChar = 61;
+    uint8_t playerChar = 189;
+    uint8_t mode = 0;
+    uint8_t scoreSwitch = 0;
 
+// ok so using "goto", call the cops! but we have a mix of assembly anyway!
 RESTART_LABEL:
+    mode = 0;
+    score = 0;
+    scoreSwitch = 0;
     playerX = 15;
 	playerY = 10;
+    enemyChar = 61;
+    playerChar = 189;
 	printOpeningScreen();
 
     while (in_Inkey() != 'S')
 	{
-		//
+		// just hard loop waiting
 	}
 
   	init_screen(0);
@@ -251,7 +261,7 @@ sync:
 
 		// we have to adjust the screen position based on Y position
 		// bottom half needs nudging left above half nudge right
-		if (bpeek(playerScreenPos) == 61)
+		if (bpeek(playerScreenPos) == enemyChar)
 		{
 			score = 0;
 		#asm
@@ -276,13 +286,33 @@ loopDelay2:
 		if (bpeek(playerScreenPos) == 13) // check if got a dollar
 		{
 			score = score + 10;
-			if (score > highScore) highScore = score;
+            scoreSwitch = scoreSwitch + 1;
+			if (score > highScore) 
+            {
+               highScore = score;
+            }
+
+            if (scoreSwitch >= 10) 
+            {
+               scoreSwitch = 0;
+               // every 200 we invert the player and enemy characters lol
+               if (mode == 1)
+               { 
+                  enemyChar = 61;
+                  playerChar = 189;
+               } else
+               {
+                  enemyChar = 189;
+                  playerChar = 61;
+               }
+               mode = 1 - mode; 
+            }
 		}
 
-		bpoke (playerScreenPos, 189);
+		bpoke (playerScreenPos, playerChar);
         
-		bpoke (zx81_saddr(combine((rand()%12),30)), 61); 
-		bpoke (zx81_saddr(combine((rand()%12)+12,0)), 61); 
+		bpoke (zx81_saddr(combine((rand()%12),30)), enemyChar); 
+		bpoke (zx81_saddr(combine((rand()%12)+12,0)), enemyChar); 
 
 		bpoke (zx81_saddr(combine((rand()%12),30)), 13); 
 		bpoke (zx81_saddr(combine((rand()%12)+12,0)), 13); 
