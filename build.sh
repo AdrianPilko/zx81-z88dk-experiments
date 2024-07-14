@@ -9,7 +9,7 @@
 
 echo "building scroller"
 #zcc +zx81 -subtype=wrx -lgfx81hr192 -L/usr/local/share/z88dk/lib  -create-app break.c -o break
-zcc +zx81 +lamda -L/usr/local/share/z88dk/lib  -create-app scroller.c -o scroller
+zcc +zx81 -O3  -L/usr/local/share/z88dk/lib  -create-app scroller.c -o scroller
 ## for some reason the P is always uppercase?!
 mv scroller.P scroller.p
 #echo "building graphics" 
