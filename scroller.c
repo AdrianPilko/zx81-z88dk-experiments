@@ -1,7 +1,10 @@
 #include <input.h>
 #include <zx81.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
+uint16_t highScore = 0;
 
 int __FASTCALL__ scroll_left()
 // works on all models, untested.
@@ -153,6 +156,34 @@ int __FASTCALL__ zx81_saddr(int yx)
 	#endasm
 }
 
+int __FASTCALL__ printOpeningScreen()
+{
+	#asm
+	    call 0x0A2A   ; clear screen
+	#endasm
+
+    printf("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
+	printf("+++++++ zx81 scroll zone +++++++\n");
+    printf("\n");
+    printf("    collect the dollars while\n");
+	printf("\n");
+	printf("         avoiding the x\n");
+    printf("\n");
+	printf("++++++++++++++++++++++++++++++++\n");
+	printf("\n");
+	printf("            keys:\n");  
+	printf("       o=left p=right\n");
+	printf("       q=up   a=down\n");
+	printf("\n");
+	printf("\n");
+	printf("       press s to start\n");
+	printf("\n");
+	printf("\n");
+    printf("          highscore\n");
+	printf("              %d\n", highScore);
+	
+}
+
 int main()
 {
 	char control = '';
@@ -160,29 +191,46 @@ int main()
 	uint16_t playerX = 15;
 	uint16_t playerScreenPos = 0;
     uint16_t oldplayerScreenPos = 0;
+    uint16_t score = 0;
+	uint8_t restart = 0;
 
-	init_screen(0);
+RESTART_LABEL:
+    playerX = 15;
+	playerY = 10;
+	printOpeningScreen();
 
-	while (control != 'Q')
+    while (in_Inkey() != 'S')
 	{
-		uint16_t frames = bpeek(16436);
+		//
+	}
 
-        while (frames % 8 != 0)
-		{
-			frames = bpeek(16436);
-		}
+  	init_screen(0);
 
-		scroll_left();
-		scroll_right();
-		
+	while (1)
+	{
+#if 0
+// for some reason this doesn't just delay for 2 frame cycles, perhaps the FRAMES variable is different
+// in the z88dk zx81 runtime??
+		#asm		
+		ld b,2
+waitForTVSync:	
+		ld a,(0xf5a3)
+		ld c,a
+sync:
+		ld a,(0xf5a3)
+		cp c
+		jr z,sync
+		djnz waitForTVSync
+		#endasm
+#endif
 		control = in_Inkey();
 
 		switch (control)
 		{
 			case 'O' : if (playerX > 1) playerX -= 1; break;
 			case 'P' : if (playerX < 31) playerX += 1; break;
-			case 'W' : if (playerY > 0) playerY -= 1; break;
-			case 'S' : if (playerY < 23) playerY += 1; break;
+			case 'Q' : if (playerY > 0) playerY -= 1; break;
+			case 'A' : if (playerY < 23) playerY += 1; break;
 			default: break;
 		};
 
@@ -191,23 +239,56 @@ int main()
         oldplayerScreenPos = playerScreenPos;
 		playerScreenPos = zx81_saddr(combine(playerY,playerX));
 
-		if ((playerY < 23) && (playerY > 12))
-		{
-		   bpoke (oldplayerScreenPos+1, 0);
-		}
-
-		if (playerY <= 12) 
-		{
-	       bpoke (oldplayerScreenPos, 0);
-		}
-	
 		// we have to adjust the screen position based on Y position
 		// bottom half needs nudging left above half nudge right
-		bpoke (playerScreenPos, 38);
+		if (bpeek(playerScreenPos) == 61)
+		{
+			score = 0;
+		#asm
+		    ld b, 10
+			ld c, 10
+		    call 0x08F5    ; print at sets cursor position
+		#endasm			
+			printf("YOU LOSE\n");
+		#asm
+		
+		    ld b, 0xff 
+loopDelay1:
+				push b
+				ld b, 0x6f
+loopDelay2:
+				djnz loopDelay2 
+			    pop b
+            djnz loopDelay1 
+		#endasm	
+			goto RESTART_LABEL;  // advised use of goto here is best way
+		}
+		if (bpeek(playerScreenPos) == 13) // check if got a dollar
+		{
+			score = score + 10;
+			if (score > highScore) highScore = score;
+		}
 
-		bpoke (zx81_saddr(combine(rand()%12,30)), 2); // '*'
-		bpoke (zx81_saddr(combine((rand()%12)+12,0)), 2); // '*'
+		bpoke (playerScreenPos, 189);
+        
+		bpoke (zx81_saddr(combine((rand()%12),30)), 61); 
+		bpoke (zx81_saddr(combine((rand()%12)+12,0)), 61); 
 
+		bpoke (zx81_saddr(combine((rand()%12),30)), 13); 
+		bpoke (zx81_saddr(combine((rand()%12)+12,0)), 13); 
+
+		
+		scroll_right();
+		
+		#asm
+		    ld b, 0
+			ld c, 1
+		    call 0x08F5    ; print at sets cursor position
+		#endasm
+		printf("%d", score);
+		
+		scroll_left();
+		
 	}
     
 	return 1;

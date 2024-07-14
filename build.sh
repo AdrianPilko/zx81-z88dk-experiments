@@ -7,11 +7,11 @@
 ## for some reason the P is always uppercase?!
 #mv hello.P hello.p
 
-echo "building breakout"
+echo "building scroller"
 #zcc +zx81 -subtype=wrx -lgfx81hr192 -L/usr/local/share/z88dk/lib  -create-app break.c -o break
-zcc +zx81 +lamda -L/usr/local/share/z88dk/lib  -create-app break.c -o break
+zcc +zx81 +lamda -L/usr/local/share/z88dk/lib  -create-app scroller.c -o scroller
 ## for some reason the P is always uppercase?!
-mv break.P break.p
+mv scroller.P scroller.p
 #echo "building graphics" 
 #zcc +zx81 -subtype=wrx -lgfx81hr192 -L/usr/local/share/z88dk/lib  -create-app hrg.c -o hrg
 #mv hrg.P hrg.p
