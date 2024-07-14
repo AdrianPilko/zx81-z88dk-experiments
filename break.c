@@ -50,7 +50,7 @@ int __FASTCALL__ scroll_right()
 	#asm
 	ld	hl,(16396)	; D_FILE
 	inc	hl
-	ld de, 792 ;693  ; offset to bottom half
+	ld de, 760 ;792 ;693  ; offset to bottom half
 	add hl, de
 
 	ld b, 12		; scrolling 12 lines right
@@ -155,14 +155,39 @@ int __FASTCALL__ zx81_saddr(int yx)
 
 int main()
 {
+	char control = '';
+	uint16_t playerY = 23;
+	uint16_t playerX = 15;
+	uint16_t playerScreenPos = 0;
+
 	init_screen(0);
 
-	while (in_Inkey()!='Q')
+	while (control != 'Q')
 	{
+		control = in_Inkey();
+
+        switch (control)
+		{
+		   case 'O' : playerX -= 1; break;
+		   case 'P' : playerX += 1; break;
+		   case 'W' : playerY -= 1; break;
+		   case 'S' : playerY += 1; break;
+		   default: break;
+		};
+
 		scroll_left();
 		scroll_right();
 		bpoke (zx81_saddr(combine(rand()%12,30)), 2); // '*'
 		bpoke (zx81_saddr(combine((rand()%12)+12,0)), 2); // '*'
+
+		if (playerY < 23) playerScreenPos -= 1;
+        bpoke (playerScreenPos+2, 0);
+
+		playerScreenPos = zx81_saddr(combine(playerY,playerX));
+		// we have to adjust the screen position based on Y position
+		// bottom half needs nudging left above half nudge right
+		bpoke (playerScreenPos, 8);
+
 	}
     
 	return 1;
