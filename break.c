@@ -159,37 +159,54 @@ int main()
 	uint16_t playerY = 23;
 	uint16_t playerX = 15;
 	uint16_t playerScreenPos = 0;
+    uint16_t oldplayerScreenPos = 0;
 
 	init_screen(0);
 
 	while (control != 'Q')
 	{
-		control = in_Inkey();
+		uint16_t frames = bpeek(16436);
 
-        switch (control)
+        while (frames % 8 != 0)
 		{
-		   case 'O' : playerX -= 1; break;
-		   case 'P' : playerX += 1; break;
-		   case 'W' : playerY -= 1; break;
-		   case 'S' : playerY += 1; break;
-		   default: break;
-		};
+			frames = bpeek(16436);
+		}
 
 		scroll_left();
 		scroll_right();
-		bpoke (zx81_saddr(combine(rand()%12,30)), 2); // '*'
-		bpoke (zx81_saddr(combine((rand()%12)+12,0)), 2); // '*'
+		
+		control = in_Inkey();
 
-		if (playerY < 23 && playerY >= 12) playerScreenPos -= 1;
-        bpoke (playerScreenPos+2, 0);
+		switch (control)
+		{
+			case 'O' : if (playerX > 1) playerX -= 1; break;
+			case 'P' : if (playerX < 31) playerX += 1; break;
+			case 'W' : if (playerY > 0) playerY -= 1; break;
+			case 'S' : if (playerY < 23) playerY += 1; break;
+			default: break;
+		};
 
-		if (playerY < 12) playerScreenPos += 1;
-        bpoke (playerScreenPos-2, 0);
+        // update screen position based on player X Y 
 
+        oldplayerScreenPos = playerScreenPos;
 		playerScreenPos = zx81_saddr(combine(playerY,playerX));
+
+		if ((playerY < 23) && (playerY > 12))
+		{
+		   bpoke (oldplayerScreenPos+1, 0);
+		}
+
+		if (playerY <= 12) 
+		{
+	       bpoke (oldplayerScreenPos, 0);
+		}
+	
 		// we have to adjust the screen position based on Y position
 		// bottom half needs nudging left above half nudge right
-		bpoke (playerScreenPos, 8);
+		bpoke (playerScreenPos, 38);
+
+		bpoke (zx81_saddr(combine(rand()%12,30)), 2); // '*'
+		bpoke (zx81_saddr(combine((rand()%12)+12,0)), 2); // '*'
 
 	}
     
