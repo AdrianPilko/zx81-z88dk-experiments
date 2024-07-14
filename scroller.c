@@ -1,13 +1,22 @@
+// Adrian Pilko 2024
+// ZX81 Scroll Zone
+
+// not sure there is a similar game to this like snake but constantly left or right scrolling
+// Potential changes:
+//    1) maybe reverse scroll left right top bottom when score reaches certain number
+//    2) change rate that it all scrolls at, start easier then get faster
+//    3) add proper score/game status  on top row: SCORE xxxx HIGH SCORE xxxx LEVEL xxxx
+
 #include <input.h>
 #include <zx81.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 
 uint16_t highScore = 0;
 
+// got scroll_left() pretty much from https://www.z88dk.org/forum/viewtopic.php?t=11668 , except I only scroll top half of the screen
+// I might re-write using ldir instruction or similar 
+
 int __FASTCALL__ scroll_left()
-// works on all models, untested.
 {
 	#asm
 	ld	hl,(16396)	; D_FILE
@@ -48,12 +57,11 @@ int __FASTCALL__ scroll_left()
 }
 
 int __FASTCALL__ scroll_right()
-// works on all models, untested.
 {
 	#asm
 	ld	hl,(16396)	; D_FILE
 	inc	hl
-	ld de, 760 ;792 ;693  ; offset to bottom half
+	ld de, 760 ; offset to bottom of screen 
 	add hl, de
 
 	ld b, 12		; scrolling 12 lines right
@@ -183,7 +191,7 @@ int __FASTCALL__ printOpeningScreen()
 	printf("\n");
 	printf("+++++ by a.pilkington 2024 ++++\n");
 	printf("+++++ youtube: byteforever ++++\n");
-	printf("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
+	printf("+++++ version: 1.0         ++++");
 }
 
 int main()
@@ -248,10 +256,10 @@ sync:
 			score = 0;
 		#asm
 		    ld b, 10
-			ld c, 10
+			ld c, 0
 		    call 0x08F5    ; print at sets cursor position
 		#endasm			
-			printf("YOU LOSE\n");
+			printf("********* GAME OVER *********\n");
 		#asm
 		
 		    ld b, 0xff 
