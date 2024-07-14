@@ -163,10 +163,10 @@ int __FASTCALL__ printOpeningScreen()
 	#endasm
 
     printf("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
+	printf("\n");
 	printf("+++++++ zx81 scroll zone +++++++\n");
     printf("\n");
     printf("    collect the dollars while\n");
-	printf("\n");
 	printf("         avoiding the x\n");
     printf("\n");
 	printf("++++++++++++++++++++++++++++++++\n");
@@ -175,13 +175,15 @@ int __FASTCALL__ printOpeningScreen()
 	printf("       o=left p=right\n");
 	printf("       q=up   a=down\n");
 	printf("\n");
-	printf("\n");
 	printf("       press s to start\n");
 	printf("\n");
 	printf("\n");
     printf("          highscore\n");
 	printf("              %d\n", highScore);
-	
+	printf("\n");
+	printf("+++++ by a.pilkington 2024 ++++\n");
+	printf("+++++ youtube: byteforever ++++\n");
+	printf("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
 }
 
 int main()
