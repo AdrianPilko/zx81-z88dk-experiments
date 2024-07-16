@@ -216,7 +216,7 @@ int __FASTCALL__ printOpeningScreen()
 	printf("\n");
 	printf("+++++ by a.pilkington 2024 ++++\n");
 	printf("+++++ youtube: byteforever ++++\n");
-	printf("+++++ version: 1.0         ++++");
+	printf("+++++     version: 1.1     ++++");
 }
 
 int main()
