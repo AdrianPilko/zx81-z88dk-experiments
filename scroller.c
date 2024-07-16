@@ -56,6 +56,32 @@ int __FASTCALL__ scroll_left()
 	#endasm
 }
 
+int __FASTCALL__ fast_scroll_left()
+{
+	#asm
+	ld	hl,(16396)	; D_FILE
+	inc	hl
+
+	push hl
+	pop de
+
+	ld b, 12		; scrolling 12 lines right
+.scrollRow
+    push bc
+	    ld bc, 31
+		inc hl
+		ldir 
+
+		inc hl
+		push hl
+		pop de
+
+    pop bc
+    djnz scrollRow
+	#endasm
+}
+
+
 int __FASTCALL__ scroll_right()
 {
 	#asm
@@ -97,7 +123,6 @@ int __FASTCALL__ scroll_right()
 
 	#endasm
 }
-
 
 
 // got from https://www.z88dk.org/forum/viewtopic.php?t=11668 
@@ -207,6 +232,7 @@ int main()
     uint8_t playerChar = 189;
     uint8_t mode = 0;
     uint8_t scoreSwitch = 0;
+	uint8_t breakCountDown = 0;
 
 // ok so using "goto", call the cops! but we have a mix of assembly anyway!
 RESTART_LABEL:
@@ -217,6 +243,7 @@ RESTART_LABEL:
 	playerY = 10;
     enemyChar = 61;
     playerChar = 189;
+	breakCountDown = 0;
 	printOpeningScreen();
 
     while (in_Inkey() != 'S')
@@ -275,7 +302,7 @@ sync:
 		    ld b, 0xff 
 loopDelay1:
 				push b
-				ld b, 0x6f
+				ld b, 0x8f
 loopDelay2:
 				djnz loopDelay2 
 			    pop b
@@ -294,6 +321,7 @@ loopDelay2:
 
             if (scoreSwitch >= 10) 
             {
+			   breakCountDown = 30;
                scoreSwitch = 0;
                // every 200 we invert the player and enemy characters lol
                if (mode == 1)
@@ -311,12 +339,18 @@ loopDelay2:
 
 		bpoke (playerScreenPos, playerChar);
         
-		bpoke (zx81_saddr(combine((rand()%12),30)), enemyChar); 
-		bpoke (zx81_saddr(combine((rand()%12)+12,0)), enemyChar); 
-
-		bpoke (zx81_saddr(combine((rand()%12),30)), 13); 
-		bpoke (zx81_saddr(combine((rand()%12)+12,0)), 13); 
-
+		if (breakCountDown > 0)
+		{
+			breakCountDown--;
+		} 
+		else
+		{
+			bpoke (zx81_saddr(combine((rand()%12),30)), enemyChar); 
+			bpoke (zx81_saddr(combine((rand()%12)+12,0)), enemyChar); 
+		
+			bpoke (zx81_saddr(combine((rand()%12),30)), 13); 
+			bpoke (zx81_saddr(combine((rand()%12)+12,0)), 13); 
+		}
 		
 		scroll_right();
 		
@@ -327,7 +361,7 @@ loopDelay2:
 		#endasm
 		printf("%d", score);
 		
-		scroll_left();
+		fast_scroll_left();
 		
 	}
     
