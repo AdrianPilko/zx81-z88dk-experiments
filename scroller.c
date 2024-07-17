@@ -216,7 +216,7 @@ int __FASTCALL__ printOpeningScreen()
 	printf("\n");
 	printf("+++++ by a.pilkington 2024 ++++\n");
 	printf("+++++ youtube: byteforever ++++\n");
-	printf("+++++     version: 1.1     ++++");
+	printf("+++++     version: 1.2     ++++");
 }
 
 int main()
@@ -233,6 +233,10 @@ int main()
     uint8_t mode = 0;
     uint8_t scoreSwitch = 0;
 	uint8_t breakCountDown = 0;
+	uint16_t level = 100;
+	uint16_t delay = level;
+	uint8_t bonus = 0;
+	uint8_t bonusCountDown = 20;
 
 // ok so using "goto", call the cops! but we have a mix of assembly anyway!
 RESTART_LABEL:
@@ -244,6 +248,10 @@ RESTART_LABEL:
     enemyChar = 61;
     playerChar = 189;
 	breakCountDown = 0;
+	level = 100;
+	delay = level;
+	bonus = 0;
+	bonusCountDown = 20;
 	printOpeningScreen();
 
     while (in_Inkey() != 'S')
@@ -280,6 +288,11 @@ sync:
 			case 'A' : if (playerY < 23) playerY += 1; break;
 			default: break;
 		};
+
+        while (delay-- > 0)
+		{
+		}
+		delay = level;
 
         // update screen position based on player X Y 
 
@@ -321,6 +334,8 @@ loopDelay2:
 
             if (scoreSwitch >= 10) 
             {
+			   if (level >= 0) level = level - 10;
+			   if (level <= 0) bonus = 1;
 			   breakCountDown = 30;
                scoreSwitch = 0;
                // every 200 we invert the player and enemy characters lol
@@ -345,21 +360,46 @@ loopDelay2:
 		} 
 		else
 		{
-			bpoke (zx81_saddr(combine((rand()%12),30)), enemyChar); 
-			bpoke (zx81_saddr(combine((rand()%12)+12,0)), enemyChar); 
-		
-			bpoke (zx81_saddr(combine((rand()%12),30)), 13); 
-			bpoke (zx81_saddr(combine((rand()%12)+12,0)), 13); 
+			if (bonus == 1) // just have $ no enemy
+			{
+				bpoke (zx81_saddr(combine(0,30)), 13);
+				bpoke (zx81_saddr(combine(1,30)), 13);
+				bpoke (zx81_saddr(combine(2,30)), 13);
+				bpoke (zx81_saddr(combine(3,30)), 13);
+				bpoke (zx81_saddr(combine(4,30)), 13);
+				bpoke (zx81_saddr(combine(12,0)), 13);
+				bpoke (zx81_saddr(combine(13,0)), 13);
+				bpoke (zx81_saddr(combine(14,0)), 13);
+				bpoke (zx81_saddr(combine(15,0)), 13);
+				bpoke (zx81_saddr(combine(16,0)), 13);
+				bonusCountDown--; 
+				if (bonusCountDown <=0) 
+				{
+					bonusCountDown = 20;
+					bonus = 0;
+				} 
+			}
+			else
+			{
+				bpoke (zx81_saddr(combine((rand()%12),30)), enemyChar); 
+				bpoke (zx81_saddr(combine((rand()%12)+12,0)), enemyChar); 
+			    if (scoreSwitch < 5) bpoke (zx81_saddr(combine((rand()%12),30)), 13); 
+			    if (scoreSwitch >=5) bpoke (zx81_saddr(combine((rand()%12)+12,0)), 13); 				
+			}
+
 		}
 		
 		scroll_right();
 		
 		#asm
-		    ld b, 0
-			ld c, 1
+		    xor a
+			ld hl, 16418
+			ld (hl), a
+		    ld b, 23
+			ld c, 0
 		    call 0x08F5    ; print at sets cursor position
 		#endasm
-		printf("%d", score);
+		printf("score %d, level %d", score, 100 - level);
 		
 		fast_scroll_left();
 		
